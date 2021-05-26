@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+
+
+    <meta charset="utf-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+
+      <link rel="stylesheet" media="screen" href="style.css" />
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body class="threejs_canvas">
+
+
+    <div id="result-iframe-wrap" role="main">
+
+        <iframe id="result" srcdoc="
+<!DOCTYPE html>
+<html lang=&quot;en&quot; >
+
+<head>
+
+  <meta charset=&quot;UTF-8&quot;>
+
+<link rel=&quot;apple-touch-icon&quot; type=&quot;image/png&quot; href=&quot;https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png&quot; />
+<meta name=&quot;apple-mobile-web-app-title&quot; content=&quot;CodePen&quot;>
+
+<link rel=&quot;shortcut icon&quot; type=&quot;image/x-icon&quot; href=&quot;https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico&quot; />
+
+<link rel=&quot;mask-icon&quot; type=&quot;&quot; href=&quot;https://cpwebassets.codepen.io/assets/favicon/logo-pin-8f3771b1072e3c38bd662872f6b673a722f4b3ca2421637d5596661b4e2132cc.svg&quot; color=&quot;#111&quot; />
+
+
+  <title>CodePen - Space globe - Three.js</title>
+  <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+
+
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    background-image: url(&quot;https://user-images.githubusercontent.com/26748614/96337246-f14d4580-1085-11eb-8793-a86d929e034d.jpg&quot;);
+    background-size: cover;
+    backdrop-filter:  brightness(50%);
+}
+
+canvas {
+    display: block;
+}
+
+#canvas_container {
+    width: 100%;
+    height: 100vh;
+}
+
+button {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid white;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.9em;
+    background: #000000;
+    color: white;
+    -webkit-font-smoothing: antialiased;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all .3s;
+}
+
+button:hover {
+    background: #ffffff;
+    color: #000000;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+
+
+  <script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage(&quot;resize&quot;, &quot;*&quot;);
+  }
+</script>
+
+
+</head>
+
+<body translate=&quot;no&quot; >
+  <div id=&quot;canvas_container&quot;></div>
+
+
+    <script src=&quot;https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-157cd5b220a5c80d4ff8e0e70ac069bffd87a61252088146915e8726e5d9f147.js&quot;></script>
+
+  <script src='https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/three@0.121.1/examples/js/controls/OrbitControls.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js'></script>
+      <script id=&quot;rendered-js&quot; >
+let renderer,
+scene,
+camera,
+sphereBg,
+nucleus,
+stars,
+controls,
+container = document.getElementById(&quot;canvas_container&quot;),
+timeout_Debounce,
+noise = new SimplexNoise(),
+cameraSpeed = 0,
+blobScale = 3;
+
+
+init();
+animate();
+
+
+function init() {
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.01, 1000);
+  camera.position.set(0, 1500, 230);
+
+  const directionalLight = new THREE.DirectionalLight(&quot;#fff&quot;, 2);
+  directionalLight.position.set(0, 250, -20);
+  scene.add(directionalLight);
+
+  let ambientLight = new THREE.AmbientLight(&quot;#ffffff&quot;, 1);
+  ambientLight.position.set(0, 20, 20);
+  scene.add(ambientLight);
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true });
+
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  //OrbitControl
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 4;
+  controls.maxDistance = 450;
+  controls.minDistance = 190;
+  controls.enablePan = false;
+  controls.minPolarAngle=controls.maxPolarAngle=1.57079
+
+  const loader = new THREE.TextureLoader();
+  const textureSphereBg = loader.load('https://i.ibb.co/DW8sP0T/Big-Ballbg.jpg');
+  const texturenucleus = loader.load('https://i.ibb.co/dJhY50n/smalball.jpg');
+  const textureStar = loader.load(&quot;https://i.ibb.co/ZKsdYSz/p1-g3zb2a.png&quot;);
+  const texture1 = loader.load(&quot;https://i.ibb.co/F8by6wW/p2-b3gnym.png&quot;);
+  const texture2 = loader.load(&quot;https://i.ibb.co/yYS2yx5/p3-ttfn70.png&quot;);
+  const texture4 = loader.load(&quot;https://i.ibb.co/yWfKkHh/p4-avirap.png&quot;);
+
+
+  /*  Nucleus  */
+  texturenucleus.anisotropy = 16;
+  let icosahedronGeometry = new THREE.IcosahedronGeometry(30, 10);
+  let lambertMaterial = new THREE.MeshPhongMaterial({ map: texturenucleus });
+  nucleus = new THREE.Mesh(icosahedronGeometry, lambertMaterial);
+  scene.add(nucleus);
+
+
+  /*    Sphere  Background   */
+  textureSphereBg.anisotropy = 16;
+  let geometrySphereBg = new THREE.SphereBufferGeometry(150, 40, 40);
+  let materialSphereBg = new THREE.MeshBasicMaterial({
+    side: THREE.BackSide,
+    map: textureSphereBg });
+
+  sphereBg = new THREE.Mesh(geometrySphereBg, materialSphereBg);
+  scene.add(sphereBg);
+
+
+  /*    Moving Stars   */
+  let starsGeometry = new THREE.Geometry();
+
+  for (let i = 0; i < 50; i++) {
+    let particleStar = randomPointSphere(150);
+
+    particleStar.velocity = THREE.MathUtils.randInt(150, 200);
+
+    particleStar.startX = particleStar.x;
+    particleStar.startY = particleStar.y;
+    particleStar.startZ = particleStar.z;
+
+    starsGeometry.vertices.push(particleStar);
+  }
+  let starsMaterial = new THREE.PointsMaterial({
+    size: 5,
+    color: &quot;#ffffff&quot;,
+    transparent: true,
+    opacity: 0.8,
+    map: textureStar,
+    blending: THREE.AdditiveBlending });
+
+  starsMaterial.depthWrite = false;
+  stars = new THREE.Points(starsGeometry, starsMaterial);
+  scene.add(stars);
+
+
+  /*    Fixed Stars   */
+  function createStars(texture, size, total) {
+    let pointGeometry = new THREE.Geometry();
+    let pointMaterial = new THREE.PointsMaterial({
+      size: size,
+      map: texture,
+      blending: THREE.AdditiveBlending });
+
+
+    for (let i = 0; i < total; i++) {
+      let radius = THREE.MathUtils.randInt(349, 70);
+      let particles = randomPointSphere(radius);
+      pointGeometry.vertices.push(particles);
+    }
+    return new THREE.Points(pointGeometry, pointMaterial);
+  }
+  scene.add(createStars(texture1, 15, 20));
+  scene.add(createStars(texture2, 5, 5));
+  scene.add(createStars(texture4, 7, 5));
+
+
+  function randomPointSphere(radius) {
+    let theta = 2 * Math.PI * Math.random();
+    let phi = Math.acos(2 * Math.random() - 1);
+    let dx = 0 + radius * Math.sin(phi) * Math.cos(theta);
+    let dy = 0 + radius * Math.sin(phi) * Math.sin(theta);
+    let dz = 0 + radius * Math.cos(phi);
+    return new THREE.Vector3(dx, dy, dz);
+  }
+}
+
+
+function animate() {
+
+  //Stars  Animation
+  stars.geometry.vertices.forEach(function (v) {
+    v.x += (0 - v.x) / v.velocity;
+    v.y += (0 - v.y) / v.velocity;
+    v.z += (0 - v.z) / v.velocity;
+
+    v.velocity -= 0.3;
+
+    if (v.x <= 5 &amp;&amp; v.x >= -5 &amp;&amp; v.z <= 5 &amp;&amp; v.z >= -5) {
+      v.x = v.startX;
+      v.y = v.startY;
+      v.z = v.startZ;
+      v.velocity = THREE.MathUtils.randInt(50, 100);
+    }
+  });
+
+
+  //Nucleus Animation
+  nucleus.geometry.vertices.forEach(function (v) {
+    let time = Date.now();
+    v.normalize();
+    let distance = nucleus.geometry.parameters.radius + noise.noise3D(
+    v.x + time * 0.0005,
+    v.y + time * 0.0001,
+    v.z + time * 0.0003) *
+    blobScale;
+    v.multiplyScalar(distance);
+  });
+  nucleus.geometry.verticesNeedUpdate = true;
+  nucleus.geometry.normalsNeedUpdate = true;
+  nucleus.geometry.computeVertexNormals();
+  nucleus.geometry.computeFaceNormals();
+  nucleus.rotation.y += 0.0001;
+
+
+  //Sphere Beckground Animation
+  sphereBg.rotation.x += 0.000;
+  sphereBg.rotation.y += 0.002;
+  sphereBg.rotation.z += 0.002;
+
+
+  controls.update();
+  stars.geometry.verticesNeedUpdate = true;
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+
+
+/*     Resize     */
+window.addEventListener(&quot;resize&quot;, () => {
+  clearTimeout(timeout_Debounce);
+  timeout_Debounce = setTimeout(onWindowResize, 80);
+});
+function onWindowResize() {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+
+
+/*     Fullscreen btn     */
+let fullscreen;
+let fsEnter = document.getElementById('fullscr');
+fsEnter.addEventListener('click', function (e) {
+  e.preventDefault();
+  if (!fullscreen) {
+    fullscreen = true;
+    document.documentElement.requestFullscreen();
+    fsEnter.innerHTML = &quot;Exit Fullscreen&quot;;
+  } else
+  {
+    fullscreen = false;
+    document.exitFullscreen();
+    fsEnter.innerHTML = &quot;Go Fullscreen&quot;;
+  }
+});
+//# sourceURL=pen.js
+    </script>
+
+
+
+</body>
+
+</html>
+
+" sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation  allow-scripts allow-top-navigation-by-user-activation" allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-read; clipboard-write"
+            allowTransparency="true" allowpaymentrequest="true" allowfullscreen="true" class="result-iframe">
+      </iframe>
+
+    </div>
+</body>
+
+</html>
